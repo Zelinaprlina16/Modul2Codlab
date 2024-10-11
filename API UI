@@ -1,0 +1,58 @@
+import 'package:flutter/material.dart';
+import 'api_service.dart';
+import 'api_model.dart';
+
+class ApiDataScreen extends StatefulWidget {
+  @override
+  _ApiDataScreenState createState() => _ApiDataScreenState();
+}
+
+class _ApiDataScreenState extends State<ApiDataScreen> {
+  final ApiService _apiService = ApiService();
+  late Future<ApiModel> _futureData;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureData = _apiService.fetchData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('API Data'),
+      ),
+      body: FutureBuilder<ApiModel>(
+        future: _futureData,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            return ListView(
+              children: [
+                _buildSection('Posts', snapshot.data!.posts.map((post) => post.title).toList()),
+                _buildSection('Comments', snapshot.data!.comments.map((comment) => comment.name).toList()),
+                _buildSection('Albums', snapshot.data!.albums.map((album) => album.title).toList()),
+                _buildSection('Photos', snapshot.data!.photos.map((photo) => photo.title).toList()),
+                _buildSection('Todos', snapshot.data!.todos.map((todo) => todo.title).toList()),
+                _buildSection('Users', snapshot.data!.users.map((user) => user.name).toList()),
+              ],
+            );
+          } else {
+            return Center(child: Text('No data available'));
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, List<String> items) {
+    return ExpansionTile(
+      title: Text(title),
+      children: items.map((item) => ListTile(title: Text(item))).toList(),
+    );
+  }
+}
